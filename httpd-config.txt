@@ -1,0 +1,99 @@
+
+20251005 - duck.ai question
+
+I am working to understand PHP routing; I have have seen examples of 
+a single "App" that can route to the typical database CRUD capabilities.
+I would like an example of a more complete web site that includes 
+several "Apps".  For simplicity, let's say that the Apps supported are:
+Duck
+Chicken
+Goose
+Turkey
+Each of these Apps will include Create, Read, Update & Delete methods.
+A top level landing page is required that will have links to each of the
+App pages noted above.
+This web site must be made with PHP > 8.2, and use Vanilla PHP (NO framework).
+Please minimize CSS.
+The CRUD functions need not include real database calls, and may consist
+of only a simple text response.
+
+# Configure Apache so that public is the document root
+DocumentRoot /path/to/bird-site/public
+
+# The following URLs will then work
+/
+ /duck
+ /duck/create
+ /duck/read
+ /duck/update
+ /duck/delete
+
+ /chicken
+ /chicken/create
+ /chicken/read
+ /chicken/update
+ /chicken/delete
+
+ /goose
+ /goose/create
+ /goose/read
+ /goose/update
+ /goose/delete
+
+ /turkey
+ /turkey/create
+ /turkey/read
+ /turkey/update
+ /turkey/delete
+
+# PHP build-in development server, from the project directory, run:
+php -S localhost:8000 -t public public/router.php
+
+# How the routine works, The URL is divided into segments:
+
+/duck/update
+# Becomes:
+[
+    'duck',
+    'update'
+]
+
+# The router uses the first segment to select the application:
+$apps = [
+    'duck' => new DuckApp(),
+    'chicken' => new ChickenApp(),
+    'goose' => new GooseApp(),
+    'turkey' => new TurkeyApp(),
+];
+
+# It then uses the second segment to select the CRUD method:
+$method = $actions[$action];
+
+$message = $app->{$method}();
+
+# For example
+/duck/update
+# Ultimately calls:
+$duckApp->update();
+
+# $method = $actions[$action];
+
+$message = $app->{$method}();
+
+# To replace the text only behavior with database operations later,
+# the methods in BirdApp can be chaned:
+public function create(): string
+{
+    // Validate submitted data.
+    // Insert into the database.
+    // Return a success message.
+
+    return "Duck record created.";
+}
+
+# The routing structure can remain unchanged while the internal CRUD 
+# implementations are expanded.
+
+
+
+
