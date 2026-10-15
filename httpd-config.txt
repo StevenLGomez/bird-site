@@ -1,5 +1,5 @@
 
-20251005 - duck.ai question
+20261005 - duck.ai question
 
 I am working to understand PHP routing; I have have seen examples of 
 a single "App" that can route to the typical database CRUD capabilities.
