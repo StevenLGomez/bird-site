@@ -1,11 +1,118 @@
 <?php
-
 declare(strict_types=1);
 
-require_once __DIR__ . '/../src/DuckApp.php';
-require_once __DIR__ . '/../src/ChickenApp.php';
-require_once __DIR__ . '/../src/GooseApp.php';
-require_once __DIR__ . '/../src/TurkeyApp.php';
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
+/*
+var_dump($_GET['app']);
+var_dump($_GET['action']);
+$app = ($_GET['app']);
+$action = ($_GET['action']);
+var_dump($app, $action);
+*/
+
+$files = [
+        __DIR__ . '/../src/DuckApp.php',
+        __DIR__ . '/../src/ChickenApp.php',
+        __DIR__ . '/../src/GooseApp.php',
+        __DIR__ . '/../src/TurkeyApp.php',
+    ];
+
+// foreach ($files as $file) 
+// {
+//     echo htmlspecialchars($file) . ' — ';    
+//     var_dump(is_file($file), is_readable($file));
+// }
+
+foreach ($files as $file) 
+{
+    require_once $file;
+}
+
+// exit;
+
+// echo __DIR__;
+// echo '__DIR__:  ' . __DIR__ . '<br />';
+// echo 'SDR:  ' . $_SERVER['DOCUMENT_ROOT'] . '<br />';
+
+// require_once __DIR__ . '/../src/DuckApp.php';
+// require_once __DIR__ . '/../src/ChickenApp.php';
+// require_once __DIR__ . '/../src/GooseApp.php';
+// require_once __DIR__ . '/../src/TurkeyApp.php';
+
+// Minimal dispatch code from duck.ai session
+$app = strtolower($_GET['app'] ?? '');
+$action = strtolower($_GET['action'] ?? '');
+
+$classes = [
+    'duck' => DuckApp::class,
+    'chicken' => ChickenApp::class,
+    'goose' => GooseApp::class,
+    'turkey' => TurkeyApp::class,
+];
+
+if ($app === '')
+{
+    echo '<h1>Bird Applications</h1>';
+    // Render the top level landing page here
+    //renderPage(
+    //    'Bird Applications',
+    //    <<<HTML
+    //        <h1>Bird Applications</h1>
+    //
+//
+//            <p>Choose an application:</p>
+//
+//            <ul>
+//                <li><a href="/duck">Duck App</a></li>
+//                <li><a href="/chicken">Chicken App</a></li>
+//                <li><a href="/goose">Goose App</a></li>
+//                <li><a href="/turkey">Turkey App</a></li>
+//            </ul>
+//        HTML
+//    );
+
+}
+elseif (!isset($classes[$app]))
+{
+    http_response_code(404);
+    exit('Unknown app: ' . htmlspecialchars($app));
+}
+else
+{
+    echo '$app: ' . $app . ' $action: ' . $action;
+
+    $instance = new $classes[$app]();
+
+    if ($action === '')
+    {
+        $action = 'page';
+    }
+
+    if (!in_array($action, ['page', 'create', 'read', 'update', 'delete'], true) || !method_exists($instance, $action)) 
+    {
+        http_response_code(404);
+        exit('Unknown action: ' . htmlspecialchars($action));
+    }
+    else
+    {
+        $instance->$action;
+    }
+
+}
+
+
+if (!method_exists($instance, $action)) {
+    http_response_code(500);
+    exit('Missing method: ' . htmlspecialchars($action));
+}
+
+echo $instance->$action();
+
+
+
 
 function escape(string $value): string
 {

@@ -94,6 +94,90 @@ public function create(): string
 # The routing structure can remain unchanged while the internal CRUD 
 # implementations are expanded.
 
+# Summary of 2026-10-15
+Project
+
+A vanilla PHP site (PHP > 8.2, no framework) with four apps—Duck, Chicken, Goose, and Turkey—each using CRUD methods inherited from BirdApp. The landing page should link to each app. Apache’s document root is set to:
+text
+
+/var/www/html/bird-site/public
+
+What we fixed or confirmed
+The app classes are in src/, and the require_once paths resolve correctly from public/index.php, for example:
+php
+
+require_once __DIR__ . '/../src/DuckApp.php';
+
+Diagnostic checks reported true for both is_file() and is_readable() for all four app files.
+
+Several app files initially had text or blank content before <?php, which caused the strict_types errors. Moving <?php to the first line and declare(strict_types=1); to the second line fixed the syntax errors.
+
+Query parameters reach PHP correctly. Visiting:
+http://localhost/?app=duck&action=create
+    produced app = duck and action = create.
+
+    The app classes extend BirdApp; that is not inherently a problem. Their inherited CRUD methods should be callable on app instances.
+
+    ?app=duck&action=page displays the Duck app page.
+
+    Visiting http://localhost currently reaches the dispatcher with empty app and action, which leads to “Unknown app.” The dispatcher needs to render the landing page when app is empty.
+
+Current likely issue
+
+The CRUD links on the app page do not yet successfully invoke the CRUD methods. Possible mismatches to check:
+
+    The links’ query parameters must match what the dispatcher expects, such as ?app=duck&action=create.
+    The action values must match the actual method names in BirdApp.php.
+    Confirm whether the CRUD methods echo their response or return it. Call them accordingly.
+    The dispatcher should allow page, create, read, update, and delete as appropriate, and handle an empty app as the landing page.
+
+Suggested dispatch shape
+
+Adapt this to the actual code in BirdApp.php:
+$app = strtolower($_GET['app'] ?? '');
+$action = strtolower($_GET['action'] ?? '');
+
+$classes = [
+    'duck' => DuckApp::class,
+    'chicken' => ChickenApp::class,
+    'goose' => GooseApp::class,
+    'turkey' => TurkeyApp::class,
+];
+
+if ($app === '') {
+    // Render the top-level landing page.
+} elseif (!isset($classes[$app])) {
+    http_response_code(404);
+    echo 'Unknown app';
+} else {
+    $instance = new $classes[$app]();
+    $action = $action ?: 'page';
+
+    if (!in_array($action, ['page', 'create', 'read', 'update', 'delete'], true)
+        || !method_exists($instance, $action)) {
+        http_response_code(404);
+        echo 'Unknown action';
+    } else {
+        // If the method prints its response:
+        $instance->$action();
+
+        // If it returns text instead, use:
+        // echo $instance->$action();
+    }
+}
+
+Example CRUD link:
+<a href="/?app=duck&action=create">Create</a>
+
+Best next step
+
+When returning to the project, inspect and compare these three pieces:
+
+    The dispatch section of public/index.php
+    The page() method in src/BirdApp.php (especially the CRUD link URLs)
+    One CRUD method in BirdApp.php
+
+That should reveal whether the problem is a link URL mismatch, an action/method-name mismatch, or a difference between methods that print output and methods that return it.
 
 
 
